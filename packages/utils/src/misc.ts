@@ -355,6 +355,17 @@ export function mergeArrays<T>(a: T[] = [], b: T[] = []): T[] {
   return [...new Set([...a, ...b])];
 }
 
+type WalletLinkConfig = {
+  deeplink: string; // e.g. "metamask://"
+  universalLink: string; // e.g. "https://metamask.app.link"
+};
+
+let walletLinkConfigs: Array<WalletLinkConfig> = [];
+
+export function setWalletLinkConfigs(configs: WalletLinkConfig[]) {
+  walletLinkConfigs = configs;
+}
+
 export async function handleDeeplinkRedirect({
   id,
   topic,
@@ -374,7 +385,16 @@ export async function handleDeeplinkRedirect({
 
     if (deeplink.endsWith("/")) deeplink = deeplink.slice(0, -1);
 
-    const link = `${deeplink}/wc?requestId=${id}&sessionTopic=${topic}`;
+    let link = `${deeplink}/wc?requestId=${id}&sessionTopic=${topic}`;
+
+    console.log("deeplink", deeplink);
+    console.log("original link:", link);
+
+    for (let config of walletLinkConfigs) {
+      link = link.replace(config.deeplink, config.universalLink);
+    }
+
+    console.log("edited link:", link);
 
     const env = getEnvironment();
 
